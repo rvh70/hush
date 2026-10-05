@@ -47,7 +47,8 @@ Click the menu-bar icon for:
 
 - **Mic detection:** CoreAudio's per-process objects
   (`kAudioProcessPropertyIsRunningInput`, macOS 14+) report which apps are
-  recording. Hush listens for changes, with a 0.2 s poll as a fallback. Music
+  recording. Hush only listens for CoreAudio change notifications and never
+  polls, so it stays idle until something starts or stops recording. Music
   playing through a headset that also has a mic doesn't count as recording.
 - **Pausing:** Spotify and Music are paused through AppleScript, only if they're
   running and playing. Hush never launches them. If neither was playing, it

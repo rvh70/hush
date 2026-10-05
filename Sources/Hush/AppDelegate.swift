@@ -2,8 +2,6 @@ import AppKit
 import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
-    /// Fallback check interval; CoreAudio listeners normally fire instantly.
-    private let pollInterval: TimeInterval = 0.2
     /// After the mic is released, wait at least this long before resuming:
     /// voice mode briefly drops and reopens the mic when it starts.
     private let minResumeDelay: TimeInterval = 0.5
@@ -15,10 +13,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     private let media = MediaController()
     private var statusItem: NSStatusItem!
-    private var timer: Timer?
     private var resumeTimer: Timer?
-    private var polling = false
-    private var pollAgain = false
+    private var checking = false
+    private var checkAgain = false
     private var micClients: [String] = []
 
     private var enabled: Bool {
@@ -35,28 +32,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         statusItem.menu = menu
         refreshIcon()
 
-        MicMonitor.observe { [weak self] in self?.poll() }
-        // Fallback in case a CoreAudio notification is ever missed.
-        timer = Timer.scheduledTimer(withTimeInterval: pollInterval, repeats: true) { [weak self] _ in
-            self?.poll()
-        }
+        MicMonitor.observe { [weak self] in self?.checkMic() }
+        // Pick up a mic that was already in use before Hush launched.
+        checkMic()
     }
 
     // MARK: - Mic state
 
-    private func poll() {
+    private func checkMic() {
         // Pausing runs an Apple event, which can let CoreAudio callbacks in
         // before it returns; finish this pass first, then look again.
-        guard !polling else {
-            pollAgain = true
+        guard !checking else {
+            checkAgain = true
             return
         }
-        polling = true
+        checking = true
         handleMicChange()
-        polling = false
-        if pollAgain {
-            pollAgain = false
-            poll()
+        checking = false
+        if checkAgain {
+            checkAgain = false
+            checkMic()
         }
     }
 
