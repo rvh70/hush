@@ -7,6 +7,8 @@ import Foundation
 enum MicMonitor {
     /// Bundle IDs that hold the mic in the background and should not count.
     static let ignored: Set<String> = [
+        // "Hey Siri" listening on the built-in mic.
+        "com.apple.CoreSpeech",
         "com.apple.corespeechd",
         "com.apple.SpeechRecognitionCore.speechrecognitiond",
     ]
